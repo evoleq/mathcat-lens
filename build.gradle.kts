@@ -12,14 +12,14 @@ plugins {
     id("org.jetbrains.dokka") version "0.9.17"
 }
 
-group = Config.Module.Template.group
-version = Config.Module.Template.version//+"-SNAPSHOT"
+group = Config.Module.MathcatLens.group
+version = Config.Module.MathcatLens.version//+"-SNAPSHOT"
 
 repositories {
     mavenLocal()
     mavenCentral()
 }
-/*
+
 kotlin {
     /* Targets configuration omitted.
     *  To find out how to configure the targets, please follow the link:
@@ -64,10 +64,10 @@ kotlin {
         }
     }
 }
-*/
-/*
+
+
 tasks{
-val licenseFormatJvmMain by creating(com.hierynomus.gradle.license.tasks.LicenseFormat::class) {
+    val licenseFormatJvmMain by creating(com.hierynomus.gradle.license.tasks.LicenseFormat::class) {
         source = fileTree("$projectDir/src/jvmMain/kotlin") {
         }
         group = "license"
@@ -83,9 +83,7 @@ val licenseFormatJvmMain by creating(com.hierynomus.gradle.license.tasks.License
         group = "license"
     }
     licenseFormat {
-        finalizedBy(licenseFormatJsMain, licenseFormatCommonMain, licenseFormatJvm)
+        finalizedBy(licenseFormatJsMain, licenseFormatCommonMain, licenseFormatJvmMain)
     }
 }
-
- */
 
