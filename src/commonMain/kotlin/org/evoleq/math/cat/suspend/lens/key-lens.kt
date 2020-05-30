@@ -2,48 +2,37 @@ package org.evoleq.math.cat.suspend.lens
 
 import kotlinx.coroutines.CoroutineScope
 import org.evoleq.math.cat.marker.MathCatDsl
+import org.evoleq.math.cat.suspend.comonad.store.IStore
 import org.evoleq.math.cat.suspend.comonad.store.KeyStore
 import org.evoleq.math.cat.suspend.morphism.ScopedSuspended
 import org.evoleq.math.cat.suspend.morphism.by
 
-typealias KeyLens<V,W,K,P> = ScopedSuspended<V,KeyStore<W,K,P>>
+typealias KeyLens<S,T,A,B> = ScopedSuspended<S,KeyStore<A, B, T>>
 
 @MathCatDsl
 @Suppress("FunctionName")
-fun <V,W,K,P> KeyLens(arrow: suspend CoroutineScope.(V)->KeyStore<W,K,P>): KeyLens<V,W,K,P> = ScopedSuspended(arrow)
+fun <S,T,A,B> KeyLens(arrow: suspend CoroutineScope.(S)->KeyStore<A,B,T>): KeyLens<S,T,A,B> = ScopedSuspended(arrow)
 
-suspend fun <U,V,W,K,P,L,Q> KeyLens<U,V,K,P>.times(other: KeyLens<P,W,L,Q>): KeyLens<U,V,Pair<K,L>,Q> = KeyLens{
-    u -> with(by(this@times)(u)) kS@{KeyStore<V,Pair<K,L>,Q>(this@kS.data) {
-        pair -> ScopedSuspended { v ->
-            val p = by(by(this@kS)(pair.first)) (v)
-            val x = by(other)(p)
-            val y = by(x)(pair.second)
-            TODO()
-        }
-    }}
+@MathCatDsl
+fun <S,T,A,B> KeyLens<S, T, A, B>.getter(): ScopedSuspended<S,A> = ScopedSuspended { s -> by(this@getter)(s).data }
+
+@MathCatDsl
+fun <S,T,A,B> KeyLens<S, T, A, B>.setter(): ScopedSuspended<S,ScopedSuspended<B, T>> = ScopedSuspended { s ->
+     with(by(this@setter)(s)) {
+         ScopedSuspended { b -> by(by(this@with)(b))(this@with.data) }
+     }
 }
 
-
-/*
-suspend fun <U,V,W,K,P,Q>  KeyLens<U, V, K, P>.times(other: KeyLens<V,W,P,Q>): KeyLens<U,V,P,Q> = KeyLens {
-    u ->
-        val ks1 = by(this@times)(u)
-        val data1 = ks1.data
-        val arrow1 = by(ks1)
+suspend operator fun <S, T, A, B, C, D> KeyLens<S, T, A, B>.times(other: KeyLens<A, B, C, D>): KeyLens<S, T, C, D> = KeyLens{s->
+    val storeA = by(this@times)(s)
+    val a = storeA.data
+    val storeC = by(other)(a)
+    val c = storeC.data
     
-        val ks2 = by(other)(data1)
-        val data2 = ks2.data
-        val arrow2 = by(ks2)
+    val dToCToB: suspend CoroutineScope.(D) -> ScopedSuspended<C,B> = by(storeC)
+    val bToAToT: suspend CoroutineScope.(B) -> ScopedSuspended<A,T> = by(storeA)
     
-        val store: KeyStore<W, K, Q> = KeyStore(data2) {
-            k -> ScopedSuspended { w -> by(arrow2(by(arrow1(k))(data1)))(w) }
-        }
-        val store1: KeyStore<V,P,Q> = KeyStore(data1) {
-            p -> ScopedSuspended {
-                v ->
-            }
-        }
-        store1
+    KeyStore(c) {
+        d -> ScopedSuspended{c -> by(bToAToT(by(dToCToB(d))(c)))(a) }
+    }
 }
-
- */
