@@ -53,3 +53,12 @@ suspend operator fun <W, P, Q> Lens<W,P>.times(other: Lens<P,Q>): Lens<W, Q> = (
 
 suspend operator fun <W, P, Q> Lens<W,P>.div(other: Lens<Q,W>): Lens<Q, P> = other * this
 //(this.indexed() / other.indexed()).toLens()
+
+
+fun <W, P, D, E> Lens<W, P>.bypass(f: (D)->E): Lens<Pair<W, D>,Pair<P,E>> = Lens{
+    pair -> with(by(this@bypass)(pair.first)) store@{
+        Store(Pair(this.data,f(pair.second))) {
+            newPair -> Pair(by(this@store)(newPair.first),pair.second)
+        }
+    }
+}
