@@ -21,7 +21,6 @@ import org.evoleq.math.cat.suspend.comonad.store.IStore
 import org.evoleq.math.cat.suspend.comonad.store.toStore
 import org.evoleq.math.cat.suspend.morphism.ScopedSuspended
 import org.evoleq.math.cat.suspend.morphism.by
-import org.evoleq.math.cat.suspend.yoneda.yonedaInverse
 
 typealias ILens<S,T,A,B> = ScopedSuspended<S,IStore<A,B,T>>
 
@@ -40,6 +39,14 @@ suspend fun <S, T, A, B> ILens<S, T, A, B>.setter() =  ScopedSuspended{
 @Suppress("FunctionName")
 @MathCatDsl
 fun <S,T,A,B> ILens(arrow: suspend CoroutineScope.(S)->IStore<A,B,T>): ILens<S,T,A,B> = ScopedSuspended(arrow)
+
+@Suppress("FunctionName")
+@MathCatDsl
+fun <S,T,A,B> ILens(view: suspend CoroutineScope.(S)->A, update: suspend CoroutineScope.(Pair<S, B>)->T): ILens<S,T,A,B> = ILens { s ->
+    IStore(view(s)) { b ->
+        update(Pair(s, b))
+    }
+}
 
 @MathCatDsl
 fun <S, A> ILens<S,S,A,A>.toLens(): Lens<S, A> = Lens {
