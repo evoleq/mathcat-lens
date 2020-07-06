@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evoleq.math.cat.lens
+package org.evoleq.math.cat.optic.lens
 
 import org.evoleq.math.cat.comonad.store.IStore
 import org.evoleq.math.cat.comonad.store.toStore
@@ -24,8 +24,8 @@ import org.evoleq.math.cat.morphism.by
 typealias ILens<S,T,A,B> = Morphism<S,IStore<A,B,T>>
 
 
-fun <S, T, A, B, TPrime> ILens<S, T, A, B>.map(f: (T)->TPrime): ILens<S, TPrime,A,B> = ILens {
-    s -> by(this@map)(s).map(f)
+fun <S, T, A, B, TPrime> ILens<S, T, A, B>.map(f: (T)->TPrime): ILens<S, TPrime, A, B> = ILens { s ->
+    by(this@map)(s).map(f)
 }
 
 fun <S, T, A, B> ILens<S, T, A, B>.getter(): Morphism<S, A> = Morphism {
@@ -37,22 +37,22 @@ fun <S, T, A, B> ILens<S, T, A, B>.setter() =  Morphism{
 
 @Suppress("FunctionName")
 @MathCatDsl
-fun <S,T,A,B> ILens(arrow: (S)->IStore<A,B,T>): ILens<S,T,A,B> = Morphism(arrow)
+fun <S,T,A,B> ILens(arrow: (S)->IStore<A,B,T>): ILens<S, T, A, B> = Morphism(arrow)
 
 @Suppress("FunctionName")
 @MathCatDsl
-fun <S,T,A,B> ILens(view: (S)->A, update: (Pair<S, B>)->T): ILens<S,T,A,B> = ILens{
-    s -> IStore(view(s)){
-        b -> update(Pair(s,b))
+fun <S,T,A,B> ILens(view: (S)->A, update: (Pair<S, B>)->T): ILens<S, T, A, B> = ILens { s ->
+    IStore(view(s)) { b ->
+        update(Pair(s, b))
     }
 }
 
 @MathCatDsl
-fun <S, A> ILens<S,S,A,A>.toLens(): Lens<S, A> = Lens {
-    w -> by(this@toLens)(w).toStore()
+fun <S, A> ILens<S, S, A, A>.toLens(): Lens<S, A> = Lens { w ->
+    by(this@toLens)(w).toStore()
 }
 
-operator fun <S, T, A, B, C, D> ILens<S, T, A, B>.times(other: ILens<A, B, C, D>): ILens<S, T, C, D> = ILens{s ->
+operator fun <S, T, A, B, C, D> ILens<S, T, A, B>.times(other: ILens<A, B, C, D>): ILens<S, T, C, D> = ILens { s ->
     // derive stores and their data
     val storeA = by(this@times)(s)
     val a = storeA.data
@@ -61,11 +61,11 @@ operator fun <S, T, A, B, C, D> ILens<S, T, A, B>.times(other: ILens<A, B, C, D>
     
     val dToB: (D) -> B = by(storeC)
     val bToT: (B) -> T = by(storeA)
-   
-    IStore(c) {
-        d -> bToT(dToB(d))
+    
+    IStore(c) { d ->
+        bToT(dToB(d))
     }
     
 }
 
-operator fun <K, L, S, T, A, B> ILens<S, T, A, B>.div(other: ILens<K, L, S, T>): ILens<K, L , A, B> = other * this
+operator fun <K, L, S, T, A, B> ILens<S, T, A, B>.div(other: ILens<K, L, S, T>): ILens<K, L, A, B> = other * this

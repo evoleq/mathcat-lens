@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evoleq.math.cat.suspend.lens
+package org.evoleq.math.cat.suspend.optic.lens
 
 import kotlinx.coroutines.CoroutineScope
 import org.evoleq.math.cat.marker.MathCatDsl
@@ -25,8 +25,8 @@ import org.evoleq.math.cat.suspend.morphism.by
 typealias ILens<S,T,A,B> = ScopedSuspended<S,IStore<A,B,T>>
 
 
-suspend fun <S, T, A, B, TPrime> ILens<S, T, A, B>.map(f: suspend CoroutineScope.(T)->TPrime): ILens<S, TPrime,A,B> = ILens {
-    s -> by(this@map)(s).map(f)
+suspend fun <S, T, A, B, TPrime> ILens<S, T, A, B>.map(f: suspend CoroutineScope.(T)->TPrime): ILens<S, TPrime, A, B> = ILens { s ->
+    by(this@map)(s).map(f)
 }
 
 suspend fun <S, T, A, B> ILens<S, T, A, B>.getter(): ScopedSuspended<S, A> = ScopedSuspended {
@@ -38,22 +38,22 @@ suspend fun <S, T, A, B> ILens<S, T, A, B>.setter() =  ScopedSuspended{
 
 @Suppress("FunctionName")
 @MathCatDsl
-fun <S,T,A,B> ILens(arrow: suspend CoroutineScope.(S)->IStore<A,B,T>): ILens<S,T,A,B> = ScopedSuspended(arrow)
+fun <S,T,A,B> ILens(arrow: suspend CoroutineScope.(S)->IStore<A,B,T>): ILens<S, T, A, B> = ScopedSuspended(arrow)
 
 @Suppress("FunctionName")
 @MathCatDsl
-fun <S,T,A,B> ILens(view: suspend CoroutineScope.(S)->A, update: suspend CoroutineScope.(Pair<S, B>)->T): ILens<S,T,A,B> = ILens { s ->
+fun <S,T,A,B> ILens(view: suspend CoroutineScope.(S)->A, update: suspend CoroutineScope.(Pair<S, B>)->T): ILens<S, T, A, B> = ILens { s ->
     IStore(view(s)) { b ->
         update(Pair(s, b))
     }
 }
 
 @MathCatDsl
-fun <S, A> ILens<S,S,A,A>.toLens(): Lens<S, A> = Lens {
-    w -> by(this@toLens)(w).toStore()
+fun <S, A> ILens<S, S, A, A>.toLens(): Lens<S, A> = Lens { w ->
+    by(this@toLens)(w).toStore()
 }
 
-suspend operator fun <S, T, A, B, C, D> ILens<S, T, A, B>.times(other: ILens<A, B, C, D>): ILens<S, T, C, D> = ILens{s ->
+suspend operator fun <S, T, A, B, C, D> ILens<S, T, A, B>.times(other: ILens<A, B, C, D>): ILens<S, T, C, D> = ILens { s ->
     // derive stores and their data
     val storeA = by(this@times)(s)
     val a = storeA.data
@@ -62,11 +62,11 @@ suspend operator fun <S, T, A, B, C, D> ILens<S, T, A, B>.times(other: ILens<A, 
     
     val dToB: suspend CoroutineScope.(D) -> B = by(storeC)
     val bToT: suspend CoroutineScope.(B) -> T = by(storeA)
-   
-    IStore(c) {
-        d -> bToT(dToB(d))
+    
+    IStore(c) { d ->
+        bToT(dToB(d))
     }
     
 }
 
-suspend operator fun <K, L, S, T, A, B> ILens<S, T, A, B>.div(other: ILens<K, L, S, T>): ILens<K, L , A, B> = other * this
+suspend operator fun <K, L, S, T, A, B> ILens<S, T, A, B>.div(other: ILens<K, L, S, T>): ILens<K, L, A, B> = other * this

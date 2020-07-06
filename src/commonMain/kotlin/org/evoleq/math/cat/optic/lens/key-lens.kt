@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evoleq.math.cat.lens
+package org.evoleq.math.cat.optic.lens
 
 import org.evoleq.math.cat.comonad.store.KeyStore
 import org.evoleq.math.cat.marker.MathCatDsl
@@ -24,7 +24,7 @@ typealias KeyLens<S,T,A,B> = Morphism<S, KeyStore<A, B, T>>
 
 @MathCatDsl
 @Suppress("FunctionName")
-fun <S,T,A,B> KeyLens(arrow: (S)->KeyStore<A,B,T>): KeyLens<S,T,A,B> = Morphism(arrow)
+fun <S,T,A,B> KeyLens(arrow: (S)->KeyStore<A,B,T>): KeyLens<S, T, A, B> = Morphism(arrow)
 
 @MathCatDsl
 fun <S,T,A,B> KeyLens<S, T, A, B>.getter(): Morphism<S,A> = Morphism { s -> by(this@getter)(s).data }
@@ -36,16 +36,16 @@ fun <S,T,A,B> KeyLens<S, T, A, B>.setter(): Morphism<S,Morphism<B, T>> = Morphis
      }
 }
 
-operator fun <S, T, A, B, C, D> KeyLens<S, T, A, B>.times(other: KeyLens<A, B, C, D>): KeyLens<S, T, C, D> = KeyLens{s->
+operator fun <S, T, A, B, C, D> KeyLens<S, T, A, B>.times(other: KeyLens<A, B, C, D>): KeyLens<S, T, C, D> = KeyLens { s ->
     val storeA = by(this@times)(s)
     val a = storeA.data
     val storeC = by(other)(a)
     val c = storeC.data
     
-    val dToCToB: (D) -> Morphism<C,B> = by(storeC)
-    val bToAToT: (B) -> Morphism<A,T> = by(storeA)
+    val dToCToB: (D) -> Morphism<C, B> = by(storeC)
+    val bToAToT: (B) -> Morphism<A, T> = by(storeA)
     
-    KeyStore(c) {
-        d -> Morphism{c -> by(bToAToT(by(dToCToB(d))(c)))(a) }
+    KeyStore(c) { d ->
+        Morphism { c -> by(bToAToT(by(dToCToB(d))(c)))(a) }
     }
 }

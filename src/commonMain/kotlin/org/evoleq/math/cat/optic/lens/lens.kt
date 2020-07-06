@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evoleq.math.cat.lens
+package org.evoleq.math.cat.optic.lens
 
 import org.evoleq.math.cat.comonad.store.Store
 import org.evoleq.math.cat.comonad.store.indexed
@@ -30,8 +30,8 @@ fun <W,P> Lens(arrow: (W)->Store<P,W>): Lens<W, P> = Morphism(arrow)
 
 @MathCatDsl
 @Suppress("FunctionName")
-fun <W,P> Lens(view: (W)->P,update: (W)->(P)->W): Lens<W, P> = Lens{
-    w -> Store(view(w)){p-> update(w)(p)}
+fun <W,P> Lens(view: (W)->P,update: (W)->(P)->W): Lens<W, P> = Lens { w ->
+    Store(view(w)) { p -> update(w)(p) }
 }
 
 @MathCatDsl
@@ -52,24 +52,24 @@ fun <W, P> Lens<W, P>.setter(): Morphism<W, Morphism<P,W>> = Morphism(morphism)
 fun <W, P> Lens<W, P>.update(): Morphism<W, Morphism<P,W>> = setter()
 
 @MathCatDsl
-fun <W, P> Lens<W,P>.indexed(): ILens<W,W,P,P> = ILens{
-    w -> (by(this@indexed)(w)).indexed()
+fun <W, P> Lens<W, P>.indexed(): ILens<W, W, P, P> = ILens { w ->
+    (by(this@indexed)(w)).indexed()
 }
 
-fun <W, P> Lens<W, P>.keys(): KeyLens<W,W,P,P> = KeyLens {
-    w -> (by(this@keys)(w)).keyStore()
+fun <W, P> Lens<W, P>.keys(): KeyLens<W, W, P, P> = KeyLens { w ->
+    (by(this@keys)(w)).keyStore()
 }
 
-operator fun <W, P, Q> Lens<W,P>.times(other: Lens<P,Q>): Lens<W, Q> = (this.indexed() * other.indexed()).toLens()
+operator fun <W, P, Q> Lens<W, P>.times(other: Lens<P, Q>): Lens<W, Q> = (this.indexed() * other.indexed()).toLens()
 
-operator fun <W, P, Q> Lens<W,P>.div(other: Lens<Q,W>): Lens<Q, P> = other * this
+operator fun <W, P, Q> Lens<W, P>.div(other: Lens<Q, W>): Lens<Q, P> = other * this
 //(this.indexed() / other.indexed()).toLens()
 
 
-fun <W, P, D, E> Lens<W, P>.bypass(f: (D)->E): Lens<Pair<W, D>,Pair<P,E>> = Lens{
-    pair -> with(by(this@bypass)(pair.first)) store@{
-        Store(Pair(this.data,f(pair.second))) {
-            newPair -> Pair(by(this@store)(newPair.first),pair.second)
+fun <W, P, D, E> Lens<W, P>.bypass(f: (D)->E): Lens<Pair<W, D>, Pair<P, E>> = Lens { pair ->
+    with(by(this@bypass)(pair.first)) store@{
+        Store(Pair(this.data, f(pair.second))) { newPair ->
+            Pair(by(this@store)(newPair.first), pair.second)
         }
     }
 }

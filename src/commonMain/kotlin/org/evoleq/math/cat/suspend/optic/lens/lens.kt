@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.evoleq.math.cat.suspend.lens
+package org.evoleq.math.cat.suspend.optic.lens
 
 import kotlinx.coroutines.CoroutineScope
 import org.evoleq.math.cat.marker.MathCatDsl
@@ -41,24 +41,24 @@ fun <W, P> Lens<W, P>.setter(p:P): ScopedSuspended<W, W> = ScopedSuspended {
 fun <W, P> Lens<W, P>.setter(): ScopedSuspended<W, ScopedSuspended<P,W>> = ScopedSuspended(morphism)
 
 @MathCatDsl
-fun <W, P> Lens<W,P>.indexed(): ILens<W,W,P,P> = ILens{
-    w -> (by(this@indexed)(w)).indexed()
+fun <W, P> Lens<W, P>.indexed(): ILens<W, W, P, P> = ILens { w ->
+    (by(this@indexed)(w)).indexed()
 }
 
-fun <W, P> Lens<W, P>.keys(): KeyLens<W,W,P,P> = KeyLens {
-    w -> (by(this@keys)(w)).keyStore()
+fun <W, P> Lens<W, P>.keys(): KeyLens<W, W, P, P> = KeyLens { w ->
+    (by(this@keys)(w)).keyStore()
 }
 
-suspend operator fun <W, P, Q> Lens<W,P>.times(other: Lens<P,Q>): Lens<W, Q> = (this.indexed() * other.indexed()).toLens()
+suspend operator fun <W, P, Q> Lens<W, P>.times(other: Lens<P, Q>): Lens<W, Q> = (this.indexed() * other.indexed()).toLens()
 
-suspend operator fun <W, P, Q> Lens<W,P>.div(other: Lens<Q,W>): Lens<Q, P> = other * this
+suspend operator fun <W, P, Q> Lens<W, P>.div(other: Lens<Q, W>): Lens<Q, P> = other * this
 //(this.indexed() / other.indexed()).toLens()
 
 
-fun <W, P, D, E> Lens<W, P>.bypass(f: (D)->E): Lens<Pair<W, D>,Pair<P,E>> = Lens{
-    pair -> with(by(this@bypass)(pair.first)) store@{
-        Store(Pair(this.data,f(pair.second))) {
-            newPair -> Pair(by(this@store)(newPair.first),pair.second)
+fun <W, P, D, E> Lens<W, P>.bypass(f: (D)->E): Lens<Pair<W, D>, Pair<P, E>> = Lens { pair ->
+    with(by(this@bypass)(pair.first)) store@{
+        Store(Pair(this.data, f(pair.second))) { newPair ->
+            Pair(by(this@store)(newPair.first), pair.second)
         }
     }
 }
