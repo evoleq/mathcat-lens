@@ -52,7 +52,7 @@ fun <S, A> ILens<S, S, A, A>.toLens(): Lens<S, A> = Lens { w ->
     by(this@toLens)(w).toStore()
 }
 
-operator fun <S, T, A, B, C, D> ILens<S, T, A, B>.times(other: ILens<A, B, C, D>): ILens<S, T, C, D> = ILens { s ->
+operator fun <S, T, A, B, C, D> ILens<S, T, A, B>.times(other: ILens<A, B, C, D>): ILens<S, T, C, D> = ILens { s: S ->
     // derive stores and their data
     val storeA = by(this@times)(s)
     val a = storeA.data
